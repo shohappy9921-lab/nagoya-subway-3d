@@ -252,6 +252,7 @@ for (const line of LINES) {
 /* 駅マーカー（乗換駅は大きめ） */
 const TERMINALS = new Set(['高畑', '藤が丘', '上小田井', '赤池', '太閤通', '徳重', '名古屋港', '上飯田', '名古屋城', '大曽根']);
 const labeledNames = new Set();
+const majorLabels = [];   // 主要駅ラベル：乗り入れ路線が全部OFFなら隠す
 for (const [name, entries] of stationIndex) {
   const isTransfer = new Set(entries.map(e => e.line)).size >= 2;
   for (const e of entries) {
@@ -288,6 +289,7 @@ for (const [name, entries] of stationIndex) {
     );
     stem.position.set(x, 2.2, z);
     labelGroup.add(stem);
+    majorLabels.push({ parts: [shaft, label, stem], lineNames: [...new Set(entries.map(e => e.line))] });
   }
 }
 
@@ -307,6 +309,7 @@ for (const [name, entries] of stationIndex) {
   g.add(label, stem);
   g.visible = false;
   g.userData.pos = new THREE.Vector3(e.x, 0, e.z);
+  g.userData.lineNames = [...new Set(entries.map(en => en.line))];
   labelGroup.add(g);
   minorLabels.push(g);
 }
@@ -470,9 +473,16 @@ updateLayout();
 
 renderer.setAnimationLoop(() => {
   controls.update();
+  const visibleLines = new Set(LINES.filter(l => l.group.visible).map(l => l.name));
+  for (const m of majorLabels) {
+    const v = m.lineNames.some(n => visibleLines.has(n));
+    for (const p of m.parts) p.visible = v;
+  }
   const showAll = camera.position.distanceTo(controls.target) < SHOW_ALL_DIST;
   for (const g of minorLabels) {
-    g.visible = showAll && camera.position.distanceTo(g.userData.pos) < CULL_DIST;
+    g.visible = showAll &&
+      g.userData.lineNames.some(n => visibleLines.has(n)) &&
+      camera.position.distanceTo(g.userData.pos) < CULL_DIST;
   }
   renderer.render(scene, camera);
 });
