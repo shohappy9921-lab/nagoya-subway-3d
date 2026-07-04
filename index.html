@@ -16,7 +16,21 @@
     border-radius: 14px; padding: 16px 18px; width: 232px;
     color: #fff; backdrop-filter: blur(6px);
   }
-  #panel h1 { font-size: 16px; margin: 0 0 2px; }
+  #panel h1 { font-size: 16px; margin: 0 0 2px; padding-right: 30px; }
+  #panel-close {
+    position: absolute; top: 10px; right: 10px;
+    width: 28px; height: 28px; border-radius: 8px; cursor: pointer;
+    background: rgba(255, 255, 255, .12); border: 1px solid rgba(255, 255, 255, .25);
+    color: #fff; font-size: 13px; line-height: 1;
+  }
+  #panel-close:hover { background: rgba(255, 255, 255, .28); }
+  #panel-open {
+    position: fixed; top: 16px; left: 16px; z-index: 10; display: none;
+    background: rgba(13, 16, 38, .85); border: 1px solid rgba(255, 255, 255, .16);
+    color: #fff; padding: 11px 16px; border-radius: 12px;
+    font-weight: 700; font-size: 13px; cursor: pointer; backdrop-filter: blur(6px);
+  }
+  #panel-open:hover { background: rgba(40, 47, 90, .9); }
   #panel .sub { font-size: 11px; color: #9aa3d0; margin-bottom: 12px; }
   label.line { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; margin: 6px 0; cursor: pointer; user-select: none; }
   .chip { width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0; }
@@ -45,6 +59,7 @@
 <body>
 
 <div id="panel">
+  <button id="panel-close" aria-label="メニューを閉じる">✕</button>
   <h1>🚇 名古屋市営地下鉄 3Dマップ</h1>
   <div class="sub">路線ごとの深さをイメージした立体路線図</div>
   <div id="line-toggles"></div>
@@ -64,6 +79,7 @@
   </div>
 </div>
 
+<button id="panel-open">☰ メニュー</button>
 <div id="tooltip"></div>
 
 <script type="importmap">
@@ -470,6 +486,20 @@ function updateLayout() {
 }
 addEventListener('resize', updateLayout);
 updateLayout();
+
+/* メニューの開閉（閉じるとマップが中央に戻る） */
+const panelEl = document.getElementById('panel');
+const openBtn = document.getElementById('panel-open');
+document.getElementById('panel-close').addEventListener('click', () => {
+  panelEl.style.display = 'none';
+  openBtn.style.display = 'block';
+  updateLayout();
+});
+openBtn.addEventListener('click', () => {
+  panelEl.style.display = '';
+  openBtn.style.display = 'none';
+  updateLayout();
+});
 
 renderer.setAnimationLoop(() => {
   controls.update();
