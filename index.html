@@ -427,11 +427,22 @@ addEventListener('pointermove', ev => {
 });
 
 /* ===== ループ・リサイズ ===== */
-addEventListener('resize', () => {
-  camera.aspect = innerWidth / innerHeight;
+/* パネルが画面幅の大半を占める縦長レイアウトでは、パネルに隠れないよう描画中心を下へずらす */
+function updateLayout() {
+  const w = innerWidth, h = innerHeight;
+  camera.aspect = w / h;
   camera.updateProjectionMatrix();
-  renderer.setSize(innerWidth, innerHeight);
-});
+  renderer.setSize(w, h);
+  const panel = document.getElementById('panel').getBoundingClientRect();
+  if (panel.width > w * 0.55) {
+    const shift = Math.min(panel.bottom * 0.55, h * 0.3);
+    camera.setViewOffset(w, h, 0, -shift, w, h);
+  } else {
+    camera.clearViewOffset();
+  }
+}
+addEventListener('resize', updateLayout);
+updateLayout();
 
 renderer.setAnimationLoop(() => {
   controls.update();
