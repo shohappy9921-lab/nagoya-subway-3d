@@ -251,6 +251,7 @@ for (const line of LINES) {
 
 /* 駅マーカー（乗換駅は大きめ） */
 const TERMINALS = new Set(['高畑', '藤が丘', '上小田井', '赤池', '太閤通', '徳重', '名古屋港', '上飯田', '名古屋城', '大曽根']);
+const labeledNames = new Set();
 for (const [name, entries] of stationIndex) {
   const isTransfer = new Set(entries.map(e => e.line)).size >= 2;
   for (const e of entries) {
@@ -268,6 +269,7 @@ for (const [name, entries] of stationIndex) {
   }
   /* 乗換駅：深さ違いをつなぐ縦シャフト＋地上ラベル */
   if (isTransfer || TERMINALS.has(name)) {
+    labeledNames.add(name);
     const x = entries[0].x, z = entries[0].z;
     const minD = Math.min(...entries.map(e => e.depth));
     const shaft = new THREE.Mesh(
@@ -288,6 +290,28 @@ for (const [name, entries] of stationIndex) {
     labelGroup.add(stem);
   }
 }
+
+/* ===== 全駅ラベル（ズームインしたときだけ、カメラに近い駅のみ表示） ===== */
+const minorLabels = [];
+for (const [name, entries] of stationIndex) {
+  if (labeledNames.has(name)) continue;
+  const e = entries[0];
+  const g = new THREE.Group();
+  const label = makeLabel(name, 22);
+  label.position.set(e.x, 3.2, e.z);
+  const stem = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.04, 0.04, 2.6, 5),
+    new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.25 })
+  );
+  stem.position.set(e.x, 1.3, e.z);
+  g.add(label, stem);
+  g.visible = false;
+  g.userData.pos = new THREE.Vector3(e.x, 0, e.z);
+  labelGroup.add(g);
+  minorLabels.push(g);
+}
+const SHOW_ALL_DIST = 110;  // これよりズームインすると全駅名が出る
+const CULL_DIST = 95;       // カメラからこの距離より遠いラベルは隠す
 
 /* ===== 地上ランドマーク ===== */
 const landmarks = new THREE.Group();
@@ -446,6 +470,10 @@ updateLayout();
 
 renderer.setAnimationLoop(() => {
   controls.update();
+  const showAll = camera.position.distanceTo(controls.target) < SHOW_ALL_DIST;
+  for (const g of minorLabels) {
+    g.visible = showAll && camera.position.distanceTo(g.userData.pos) < CULL_DIST;
+  }
   renderer.render(scene, camera);
 });
 </script>
