@@ -69,12 +69,13 @@
   </div>
   <div class="row">
     <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
-      <input type="checkbox" id="auto-rotate" checked> 自動回転
+      <input type="checkbox" id="auto-rotate"> 自動回転
     </label>
   </div>
   <div class="hint">
-    🖱️ ドラッグ：回転 ／ ホイール：ズーム<br>
-    右ドラッグ：移動 ／ 駅にカーソルで駅名表示<br>
+    🖱️ ドラッグ／一本指：移動 ・ ホイール／ピンチ：ズーム<br>
+    回転は右ドラッグ（スマホは2本指をひねる）<br>
+    駅にカーソルで駅名表示<br>
     ※ 駅位置・深さは概略のイメージです
   </div>
 </div>
@@ -183,8 +184,12 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.target.set(0, -8, 0);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
-controls.autoRotate = true;
+controls.autoRotate = false;
 controls.autoRotateSpeed = 0.7;
+/* 一本指・左ドラッグ＝移動、二本指ツイスト・右ドラッグ＝回転 */
+controls.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE };
+controls.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
+controls.screenSpacePanning = false;  // 地面に沿ってスクロールする地図らしい挙動
 controls.maxDistance = 250;
 controls.minDistance = 25;
 controls.maxPolarAngle = 1.62;
